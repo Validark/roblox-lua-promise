@@ -428,7 +428,7 @@ function Promise.prototype:await()
 		coroutine.yield()
 
 		if ok == nil then
-			-- If cancelled
+			-- If cancelled, we return nil.
 			return nil
 		end
 
@@ -438,6 +438,9 @@ function Promise.prototype:await()
 	elseif self._status == Promise.Status.Rejected then
 		return false, unpack(self._values, 1, self._valuesLength)
 	end
+
+	-- If the promise is cancelled, fall through to nil.
+	return nil
 end
 
 --[[
