@@ -1,18 +1,5 @@
 # Roblox Lua Promise
-An implementation of `Promise` similar to Promise/A+.
-
-## Motivation
-I've found that being able to yield anywhere causes lots of bugs. In [Rodux](https://github.com/Roblox/Rodux), I explicitly made it impossible to yield in a change handler because of the sheer number of bugs that occured when callbacks randomly yielded.
-
-As such, I think that Roblox needs an object-based async primitive. It's not important to me whether these are Promises, Observables, Task objects, or Futures.
-
-The important traits are:
-
-* An object that represents a unit of asynchronous work
-* Composability
-* Predictable timing
-
-This Promise implementation attempts to satisfy those traits.
+A fork of LPGhatguy's [roblox-lua-promise](https://github.com/LPGhatguy/roblox-lua-promise), modified for use in roblox-ts.
 
 ## API
 
@@ -50,43 +37,11 @@ This Promise implementation attempts to satisfy those traits.
 		* Promises will only be cancelled if all of their consumers are also cancelled. This is to say that if you call `andThen` twice on the same promise, and you cancel only one of the promises resulting from the `andThen` call, it will not cancel the parent promise until the other child promise is also cancelled.
 * `Promise:await() -> ok, value`
 	* Yields the current thread until the given Promise completes. Returns `ok` as a bool, followed by the value that the promise returned.
+* `Promise:getStatus() -> Promise.Status`
+* `Promise:isRejected() -> bool`
+* `Promise:isResolved() -> bool`
+* `Promise:isCancelled() -> bool`
+* `Promise:isPending() -> bool`
 
 ## Example
 This Promise implementation finished synchronously. In order to wrap an existing async API, you should use `spawn` or `delay` in order to prevent your calling thread from accidentally yielding.
-
-```lua
-local HttpService = game:GetService("HttpService")
-
--- A light wrapper around HttpService
--- Ideally, you do this once per project per async method that you use.
-local function httpGet(url)
-	return Promise.new(function(resolve, reject)
-		-- Spawn to prevent yielding, since GetAsync yields.
-		spawn(function()
-			local ok, result = pcall(HttpService.GetAsync, HttpService, url)
-
-			if ok then
-				resolve(result)
-			else
-				reject(result)
-			end
-		end)
-	end)
-end
-
--- Usage
-httpGet("https://google.com")
-	:andThen(function(body)
-		print("Here's the Google homepage:", body)
-	end)
-	:catch(function(err)
-		warn("We failed to get the Google homepage!", err)
-	end)
-```
-
-## Future Additions
-* `Promise.wrapAsync`
-	* Intended to wrap an existing Roblox API that yields, exposing a new one that returns a Promise.
-
-## License
-This project is available under the CC0 license. See [LICENSE](LICENSE) for details.
