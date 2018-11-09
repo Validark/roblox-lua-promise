@@ -273,6 +273,22 @@ function Promise.prototype:getStatus()
 	return self._status
 end
 
+function Promise.prototype:isRejected()
+	return self._status == Promise.Status.Rejected
+end
+
+function Promise.prototype:isResolved()
+	return self._status == Promise.Status.Resolved
+end
+
+function Promise.prototype:isPending()
+	return self._status == Promise.Status.Started
+end
+
+function Promise.prototype:isCancelled()
+	return self._status == Promise.Status.Cancelled
+end
+
 --[[
 	Creates a new promise that receives the result of this promise.
 
