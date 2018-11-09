@@ -1,5 +1,6 @@
 --[[
 	An implementation of Promises similar to Promise/A+.
+	Forked from LPGhatguy/roblox-lua-promise, modified for roblox-ts.
 ]]
 
 local PROMISE_DEBUG = false
@@ -405,23 +406,31 @@ function Promise.prototype:await()
 	self._unhandledRejection = false
 
 	if self._status == Promise.Status.Started then
-		local result
-		local resultLength
-		local bindable = Instance.new("BindableEvent")
+		local ok, result, resultLength
 
-		self:andThen(
-			function(...)
-				resultLength, result = pack(...)
-				bindable:Fire(true)
-			end,
-			function(...)
-				resultLength, result = pack(...)
-				bindable:Fire(false)
-			end
-		)
+		local thread = coroutine.running()
 
-		local ok = bindable.Event:Wait()
-		bindable:Destroy()
+		spawn(function()
+			self:andThen(
+				function(...)
+					resultLength, result = pack(...)
+					ok = true
+				end,
+				function(...)
+					resultLength, result = pack(...)
+					ok = false
+				end
+			):finally(function()
+				coroutine.resume(thread)
+			end)
+		end)
+
+		coroutine.yield()
+
+		if ok == nil then
+			-- If cancelled
+			return nil
+		end
 
 		return ok, unpack(result, 1, resultLength)
 	elseif self._status == Promise.Status.Resolved then
