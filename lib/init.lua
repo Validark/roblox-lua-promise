@@ -199,8 +199,9 @@ function Promise.spawn(callback, ...)
 		callback(getArgs())
 	end)
 	local args = { ... }
+	local n = select("#", ...)
 	spawnBindable:Fire(function()
-		return unpack(args)
+		return unpack(args, 1, n)
 	end)
 	connection:Disconnect()
 end
